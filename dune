@@ -1,0 +1,10 @@
+(ocamllex
+  (modules minic_lexer))
+(menhir
+  (flags --explain --dump)
+  (modules minic_parser))
+(executable
+  (name minic))
+(env
+  (dev
+    (flags (:standard -warn-error -A))))

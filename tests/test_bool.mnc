@@ -1,0 +1,6 @@
+int PARAM = 5;
+bool B = true;
+
+int f() {
+  return 0;
+}

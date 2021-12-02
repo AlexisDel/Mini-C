@@ -1,0 +1,20 @@
+-boucle for
+
+
+-fonction qui transforme :
+
+int a = 5;
+if(true){a = 6;}
+else{...;}
+...
+
+en :
+int a = 5;
+void foo(){
+	if(true){a = 6;}
+	else{...;}
+}
+...
+
+-les fonctions typées sans return ne posent pas de pb alors que normalement si
+
