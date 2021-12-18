@@ -6,6 +6,7 @@
 %}
 
 (* Déclaration des lexèmes *)
+%token MAIN
 %token <int> CST
 %token <bool> BOOL_CST
 %token <string> IDENT
@@ -28,8 +29,8 @@
    information minimale : la position. *)
 program:
 | dl=declaration_list EOF
-       { let var_list, fun_list = dl in
-         { globals = var_list; functions = fun_list; } }
+       { let var_list, fun_list, m = dl in
+         { globals = var_list; functions = fun_list; main = m} }
 | error { let pos = $startpos in
           let message =
             Printf.sprintf
@@ -41,11 +42,13 @@ program:
 
 (* Chaque déclaration peut concerner une variable ou une fonction. *)
 declaration_list:
-| (* vide *) { [], [] }    
-| vd=variable_decl dl=declaration_list { let vl, fl = dl in
-                                         vd :: vl, fl }
-| fd=function_decl dl=declaration_list { let vl, fl = dl in
-                                         vl, fd :: fl }
+| (* vide *) { [], [], [] }    
+| vd=variable_decl dl=declaration_list { let vl, fl, m = dl in
+                                         (vd :: vl), fl, m }
+| fd=function_decl dl=declaration_list { let vl, fl, m = dl in
+                                         vl, (fd :: fl), m }
+| md = main_decl dl=declaration_list {let vl, fl, _ = dl in
+                                          vl, fl, [md]}
 ;
 
 (* Déclaration de variable.
@@ -77,6 +80,9 @@ typ:
 function_decl:
 | t=typ f=IDENT LPAR p=list(params) RPAR BEGIN v=list(variable_decl) s=list(instruction) END
    { { name=f; code=s; params=p; return=t; locals=v } }
+;
+main_decl:
+|t = typ MAIN LPAR RPAR BEGIN v=list(variable_decl) s=list(instruction) END {{name = "main" ; code = s ; params = [] ; return = t; locals = v}}
 ;
 params:
 | t=typ x=IDENT COMMA { (x, t) }

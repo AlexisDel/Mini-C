@@ -6,6 +6,8 @@ int fact(int n) {
   }
 }
 
-void main() {
-  putchar(fact(PARAM));
+
+int main(){
+	putchar(fact(PARAM));
+	return 0;
 }

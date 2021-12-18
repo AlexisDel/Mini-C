@@ -65,6 +65,9 @@ let rec execinstr i env =
           | _ -> failwith "unknown exception"
       end
     | Skip -> raise ExcepSkip
+    | Putchar(e) -> let tmp = eval_expr e env in
+                    print_int tmp; print_string "\n"; env
+    | Return(_) -> env
     |_ -> failwith  "not implemented instr"
 
 and execseq b env = 
@@ -76,14 +79,38 @@ and execseq b env =
 
 
 let interpret prog =
+
   (*environnement global*)
   let global_env = Hashtbl.create 1024 in
-  (*évaluation des variables globales :*)
-  let rec eval_globals g env = 
+
+  (*ajout des variables globales :*)
+  let rec add_globals g env = 
     match g with
-      |[] -> ()
+      |[] -> env
       |(id, _, ex)::s -> Hashtbl.add env id (eval_expr ex env);
-                       eval_globals s env
+                       add_globals s env
   in
-  eval_globals prog.globals global_env
-  (*List.iter (fun x -> print_int x; print_string " ") (Hashtbl.iter (eval_globals prog.globals global_env))*)
+  let global_env = add_globals prog.globals global_env in
+  (*add_globals prog.globals global_env*)
+  (*List.iter (fun x -> print_int x; print_string " ") (Hashtbl.iter (add_globals prog.globals global_env))*)
+
+  (*environnement des fonctions*)
+  let function_env = Hashtbl.create 1024 in
+
+  (*ajout des fonctions :*)
+  let rec add_functions f env=
+    match f with
+      |[] -> env
+      |fundef::s -> Hashtbl.add env fundef.name (fundef.params, fundef.locals, fundef.code); add_functions s env
+  in
+  let function_env = add_functions prog.functions function_env in
+
+  (*interpretatin du main*)
+
+  let interpret_main main env=
+    match main with
+      |[main] -> execseq main.code env
+      |_ -> failwith "error in main interpretation"
+  in
+  let global_env = interpret_main prog.main global_env in
+  Hashtbl.iter (fun s e -> print_string s; print_string " : "; print_int e; print_string " ") global_env; print_string "\n"

@@ -12,3 +12,7 @@ int f(int a, bool b){
 int f() {
   return 5 + 2 * 8;
 }
+
+int main(){
+	return 0;
+}

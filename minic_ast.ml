@@ -44,4 +44,5 @@ type fun_def = {
 type prog = {
   globals: (string * typ * expr) list;
   functions: fun_def list;
+  main: fun_def list;
 }

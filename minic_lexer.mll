@@ -19,7 +19,8 @@
         "if",       IF;
         "else",     ELSE;
         "while",    WHILE;
-        "for",      FOR
+        "for",      FOR;
+        "main",     MAIN
       ] ;
     fun s ->
       try  Hashtbl.find h s

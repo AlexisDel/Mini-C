@@ -3,3 +3,8 @@ int a;
 int foo(){
 a = 5;
 }
+
+
+int main(){
+	return 0;
+}

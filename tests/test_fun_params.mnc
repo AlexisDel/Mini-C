@@ -2,5 +2,6 @@ int f(){
 	return 1;
 }
 
-void main(int a, int b, bool c){
+int main(){
+	return 0;
 }

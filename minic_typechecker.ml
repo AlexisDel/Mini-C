@@ -68,7 +68,7 @@ let typecheck_program (prog: prog) =
         exp (String.length s - 1) []
       in
 
-      let best = List.fold_left (fun acc (k,v) -> if (common_letters (to_list x) (to_list k)) > ((String.length x) - 2) then k else acc) "" (Env.bindings env) in
+      let best = List.fold_left (fun acc (k,_) -> if (common_letters (to_list x) (to_list k)) > ((String.length x) - 2) then k else acc) "" (Env.bindings env) in
       if best = "" then (x^" : Unboud Value")
       else ("Did you mean '"^best^"' ?")
     in
@@ -108,11 +108,28 @@ let typecheck_program (prog: prog) =
     typecheck_seq typecheck_variable_local (fdef.locals);
     typecheck_seq (typecheck_instr local_env) (fdef.code);
   in
+  (*check si il est mention d'un return dans une liste d'instructions*)
+  let rec return_in_list l =
+    match l with
+      |[] -> false
+      |Return(_)::_ -> true
+      |_::s -> return_in_list s
+  in
 
+  let typecheck_main f =
+    match f with
+      |[] -> failwith "undefined reference to \'main\'"
+      |[f] -> if not (f.name = "main") || not (f.params = []) || not (f.return = Int) 
+              then failwith "synthax error on main function" 
+              else if not (return_in_list f.code) then failwith "no return reference occure in main function"
+      |_ -> failwith "error too much function in program.main"
+  in
   (* Code principal du typage d'un programme : on type ses fonctions.
      Il faudrait aussi vérifier les valeurs initiales des variables globales.
      À COMPLÉTER
    *)
   List.iter typecheck_function (prog.functions);
-  List.iter typecheck_variable_global (prog.globals)
+  List.iter typecheck_variable_global (prog.globals);
+  typecheck_main (prog.main);
+  List.iter typecheck_function (prog.main)
 ;;
