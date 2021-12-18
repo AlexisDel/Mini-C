@@ -11,7 +11,7 @@
 %token <string> IDENT
 %token LPAR RPAR BEGIN END
 %token RETURN SET
-%token IF ELSE WHILE
+%token IF ELSE WHILE FOR
 %token SEMI COMMA
 %token INT BOOL VOID
 %token PLUS TIMES LT
@@ -76,7 +76,7 @@ typ:
 *)
 function_decl:
 | t=typ f=IDENT LPAR p=list(params) RPAR BEGIN v=list(variable_decl) s=list(instruction) END
-    { { name=f; code=s; params=p; return=t; locals=v } }
+   { { name=f; code=s; params=p; return=t; locals=v } }
 ;
 params:
 | t=typ x=IDENT COMMA { (x, t) }
@@ -94,9 +94,12 @@ instruction:
 | IF LPAR e=expression RPAR BEGIN s1=list(instruction) END { If(e, s1, [Skip])}
 | IF LPAR e=expression RPAR BEGIN s1=list(instruction) END ELSE BEGIN s2=list(instruction) END { If(e,s1,s2) }
 | WHILE LPAR e=expression RPAR BEGIN s=list(instruction) END { While(e,s) }
+| FOR LPAR v=variable_decl e=expression SEMI i=indentation RPAR BEGIN s=list(instruction) END { For(v,e,s@[i]) }
 | RETURN e=expression SEMI { Return(e) }
 | e=expression SEMI { Expr(e) }
 ;
+indentation:
+| x=IDENT SET e=expression { Set(x,e) }
 
 (* Expressions.
 

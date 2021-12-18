@@ -54,18 +54,23 @@ let typecheck_program (prog: prog) =
 
     (* Vérification du bon typage d'une instruction ou d'une séquence.
        Toujours local. *)
-    let rec typecheck_instr = function
+    let rec typecheck_instr local_env = function
       | Skip -> ()
       | Putchar(e) -> if type_expr local_env e <> Int then failwith "type error"
       | Set(v,e) -> let ty, _ = try Env.find v local_env with Not_found -> Env.find v global_env in
                     if ty <> type_expr local_env e then failwith "type error"
       | If(e,s1,s2) -> if type_expr local_env e <> Bool then failwith "type error"
                        else
-                        List.iter typecheck_instr s1;
-                        List.iter typecheck_instr s2
+                        List.iter (typecheck_instr local_env) s1;
+                        List.iter (typecheck_instr local_env) s2
       | While(e,s) -> if type_expr local_env e <> Bool then failwith "type error"
                       else
-                        List.iter typecheck_instr s
+                        List.iter (typecheck_instr local_env) s;
+      | For(v,e,s) -> let x_v, ty_v, e_v = v in
+                      let local_env = Env.add x_v (ty_v, e_v) local_env in
+                      if type_expr local_env e <> Bool then failwith "type error"
+                      else
+                        List.iter (typecheck_instr local_env) s;                  
       (* Cas d'une instruction [return]. On vérifie que le type correspond au
          type de retour attendu par la fonction dans laquelle on se trouve. *)
       | Return(e) -> let t = type_expr local_env e in
@@ -80,7 +85,7 @@ let typecheck_program (prog: prog) =
 
     (* Code principal du typage d'une fonction : on type ses instructions. *)
     typecheck_seq typecheck_variable_local (fdef.locals);
-    typecheck_seq typecheck_instr (fdef.code);
+    typecheck_seq (typecheck_instr local_env) (fdef.code);
   in
 
   (* Code principal du typage d'un programme : on type ses fonctions.

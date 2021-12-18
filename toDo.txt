@@ -18,3 +18,4 @@ void foo(){
 
 -les fonctions typées sans return ne posent pas de pb alors que normalement si
 
+-typechecker doit vérif type instruction si contient return (ex while avec return)
