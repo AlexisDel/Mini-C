@@ -87,6 +87,15 @@ params:
 
    À COMPLÉTER
 *)
+
+error_semi:
+| PUTCHAR LPAR expression RPAR {}
+| IDENT SET IDENT {}
+| IDENT SET expression {}
+| RETURN expression {}
+| expression {}
+;
+
 instruction:
 | PUTCHAR LPAR e=expression RPAR SEMI { Putchar(e) }
 | x=IDENT SET n=IDENT SEMI { Set(x,Get(n)) }
@@ -97,7 +106,16 @@ instruction:
 | FOR LPAR v=variable_decl e=expression SEMI i=indentation RPAR BEGIN s=list(instruction) END { For(v,e,s@[i]) }
 | RETURN e=expression SEMI { Return(e) }
 | e=expression SEMI { Expr(e) }
+
+| error_semi { let pos = $startpos in
+          let message =
+            Printf.sprintf
+              "Syntax error at %d, %d, Missing semicolon ?"
+              pos.pos_lnum (pos.pos_cnum - pos.pos_bol)
+          in
+          failwith message }
 ;
+
 indentation:
 | x=IDENT SET e=expression { Set(x,e) }
 
