@@ -1,6 +1,5 @@
--boucle for
 
-
+Thomas : 
 -fonction qui transforme :
 
 int a = 5;
@@ -19,3 +18,19 @@ void foo(){
 -les fonctions typées sans return ne posent pas de pb alors que normalement si
 
 -typechecker doit vérif type instruction si contient return (ex while avec return)
+
+
+
+
+Alexis : 
+- améliorer la fonction common_letters()
+- check les noms dans tous les env (pas que local)
+- déclaration partout (pas que en début de fonction)
+
+
+
+
+
+
+Général:
+- régler les confits à base SLR(1) et %left ...
