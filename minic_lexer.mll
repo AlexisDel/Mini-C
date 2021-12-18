@@ -65,7 +65,6 @@ rule token = parse
       { TIMES }
   | "<"
       { LT }
-
   | _
       { failwith ("Unknown character : " ^ (lexeme lexbuf)) }
   | eof
