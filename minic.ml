@@ -7,5 +7,5 @@ let () =
   Minic_typechecker.typecheck_program ast;
   Printf.printf "Successfully checked program %s\n" file;
   (* On pourrait ajouter ici des étapes suivantes. *)
-  (*Minic_interpret.interpret ast;*)
+  Minic_interpret.interpret ast;
   exit 0
