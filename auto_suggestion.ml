@@ -1,9 +1,11 @@
-exception Not_close_match
-
+(* Utils *)
 let string_to_list s =
   let rec exp i l =
     if i < 0 then l 
     else exp (i - 1) (s.[i] :: l) in exp (String.length s - 1) []
+
+(* Auto-suggestion *)
+exception Not_close_match
 
 let rec common_letters s1 s2 = match s1, s2 with 
   | [] , _ -> 0
@@ -18,3 +20,7 @@ let find_best_match w l =
   match best_match with
     | None -> raise Not_close_match
     | Some (v,_) -> ("Did you mean '"^v^"' ?")
+
+let did_u_mean v local_env global_env =
+      (* Donne la priorité au var locales *)      
+      try find_best_match v local_env with Not_close_match -> try find_best_match v global_env with Not_close_match -> (v^" : Unboud Value")
