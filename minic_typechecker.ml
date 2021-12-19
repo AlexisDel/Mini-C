@@ -1,4 +1,5 @@
 open Minic_ast
+open Utils
 (* Pour représenter les environnements associant chaque variable à son type. *)
 module Env = Map.Make(String)
 
@@ -52,25 +53,9 @@ let typecheck_program (prog: prog) =
       if ty <> type_expr local_env e then failwith "type error"
     in
 
-    let not_found x env =
-      
-      let rec common_letters s1 s2 = match s1, s2 with 
-        | [] , _ -> 0
-        | _ , [] -> 0
-        | h1::t1, h2::t2 -> 
-            if (Char.equal h1 h2) then 1 + common_letters t1 t2
-            else common_letters t1 t2
-      in
-
-      let to_list s =
-        let rec exp i l =
-          if i < 0 then l else exp (i - 1) (s.[i] :: l) in
-        exp (String.length s - 1) []
-      in
-
-      let best = List.fold_left (fun acc (k,_) -> if (common_letters (to_list x) (to_list k)) > ((String.length x) - 2) then k else acc) "" (Env.bindings env) in
-      if best = "" then (x^" : Unboud Value")
-      else ("Did you mean '"^best^"' ?")
+    let did_u_mean v local_env =
+      (* Donne la priorité au var locales *)      
+      try find_best_match v (Env.bindings local_env) with Not_close_match -> try find_best_match v (Env.bindings global_env) with Not_close_match -> (v^" : Unboud Value")
     in
 
     (* Vérification du bon typage d'une instruction ou d'une séquence.
@@ -78,7 +63,7 @@ let typecheck_program (prog: prog) =
     let rec typecheck_instr local_env = function
       | Skip -> ()
       | Putchar(e) -> if type_expr local_env e <> Int then failwith "type error"
-      | Set(v,e) -> let ty, _ = try Env.find v local_env with Not_found -> try Env.find v global_env with Not_found -> failwith (not_found v local_env) in
+      | Set(v,e) -> let ty, _ = try Env.find v local_env with Not_found -> try Env.find v global_env with Not_found -> failwith (did_u_mean v local_env) in
                     if ty <> type_expr local_env e then failwith "type error"
       | If(e,s1,s2) -> if type_expr local_env e <> Bool then failwith "type error"
                        else

@@ -24,7 +24,6 @@ void foo(){
 
 Alexis : 
 - améliorer la fonction common_letters()
-- check les noms dans tous les env (pas que local)
 - déclaration partout (pas que en début de fonction)
 
 
