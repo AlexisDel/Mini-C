@@ -192,6 +192,6 @@ let interpret prog =
       |[main] -> execseq main.code genv fenv
       |_ -> failwith "error in main interpretation"
   in
-  let global_env, function_env = interpret_main prog.main global_env function_env in
-
-  Hashtbl.iter (fun s e -> print_string s; print_string " : "; print_int e; print_string " ") global_env; print_string "\n"
+  let _, _ = interpret_main prog.main global_env function_env in
+  print_string ""
+  (*Hashtbl.iter (fun s e -> print_string s; print_string " : "; print_int e; print_string " ") global_env; print_string "\n"*)

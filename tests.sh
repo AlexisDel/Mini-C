@@ -7,3 +7,4 @@ dune build && ./_build/default/minic.exe tests/test_0.mnc
 ./_build/default/minic.exe tests/test_opp.mnc 
 ./_build/default/minic.exe tests/test_limitTest.mnc 
 ./_build/default/minic.exe tests/test_for.mnc 
+./_build/default/minic.exe tests/test_interpret.mnc 
