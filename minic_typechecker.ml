@@ -14,18 +14,26 @@ let typecheck_program (prog: prog) =
        À nouveau, fonction locale avec accès à tout ce qui est au-dessus. *)
   let rec type_expr local_env = function
     | Null(v) -> let ty, _ = try Env.find v local_env with Not_found -> try Env.find v global_env with Not_found -> 
-                                  failwith (did_u_mean v ((Env.bindings local_env)@(Env.bindings global_env)) ) in ty
+                                  failwith (did_u_mean v (bindings_to_var_names (Env.bindings local_env) (Env.bindings global_env)) ) in ty
     | Cst _ -> Int
     | BCst _ -> Bool
     | Add(e1,e2) -> if(type_expr local_env e1 = Int && type_expr local_env e2 = Int) then Int else failwith "type error"
     | Mul(e1,e2) -> if(type_expr local_env e1 = Int && type_expr local_env e2 = Int) then Int else failwith "type error"
     | Lt(e1,e2) -> if(type_expr local_env e1 = Int && type_expr local_env e2 = Int) then Bool else failwith "type error"
     | Get(v) -> let ty, e = try Env.find v local_env with Not_found -> try Env.find v global_env with Not_found -> 
-                                  failwith (did_u_mean v ((Env.bindings local_env)@(Env.bindings global_env)) ) in
+                                failwith (did_u_mean v (bindings_to_var_names (Env.bindings local_env) (Env.bindings global_env)) ) in
                     if ty = type_expr local_env e then ty else failwith "type error"
-    | Call(f,p) -> let fu = List.find (fun x -> x.name = f) (prog.functions) in
-                   List.iter2 (fun e p -> if type_expr local_env e <> (snd p) then failwith "params type error") p (fu.params);
-                   fu.return
+    | Call(f,p) -> 
+                  let fu = 
+                          try List.find (fun x -> x.name = f) (prog.functions) with Not_found -> 
+                            failwith (did_u_mean f (fun_def_to_fun_names (prog.functions) ) ) in
+                  if List.length p > List.length (fu.params) then 
+                    failwith (fu.name ^ "(" ^ (fun_def_to_arguments_as_string (fu.params)) ^ ") : too much arguments !")
+                  else if List.length p < List.length (fu.params) then 
+                    failwith (fu.name ^ "(" ^ (fun_def_to_arguments_as_string (fu.params)) ^ ") : missing arguments ?")
+                  else
+                    List.iter2 (fun e p -> if type_expr local_env e <> (snd p) then failwith "params type error") p (fu.params);
+                    fu.return
   
   in
 
@@ -61,7 +69,7 @@ let typecheck_program (prog: prog) =
       | Skip -> ()
       | Putchar(e) -> if type_expr local_env e <> Int then failwith "type error"
       | Set(v,e) -> let ty, _ = try Env.find v local_env with Not_found -> try Env.find v global_env with Not_found -> 
-                                  failwith (did_u_mean v ((Env.bindings local_env)@(Env.bindings global_env)) ) in
+                                  failwith (did_u_mean v (bindings_to_var_names (Env.bindings local_env) (Env.bindings global_env)) ) in
                     if ty <> type_expr local_env e then failwith "type error"
       | If(e,s1,s2) -> if type_expr local_env e <> Bool then failwith "type error"
                        else

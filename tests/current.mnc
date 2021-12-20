@@ -1,12 +1,12 @@
 int longueur1 = 0;
 
-int main(){
-  
-  int longueur2 = 0;
-  for(int i = 0; i < 10; longueur = i + 1){
-    putchar(i);
-  }
+int test(int i, int a){
+  putchar(i);
+  return i;
+}
 
-  return 0;
+int main(){
+  test(2,2,3);
   
+  return 0;
 }
