@@ -34,20 +34,22 @@ let rec eval_expr e genv fenv=
       let v2 = eval_expr e2 genv fenv in
       if v1 < v2 then 1 else 0
     | Null(_) -> -1  (*not initialised variable*)
-    | Call(f, p) -> let local_fun_env = Hashtbl.create 1024 in (*création d'un environnement local à la fonction*)
-                    try List.iter2 (fun x y -> let pvalue = eval_expr x genv fenv in Hashtbl.add local_fun_env (fst y) pvalue ) p (Hashtbl.find fenv f).params; 
-                    let _, _, _, e, b = exec_function_code (Hashtbl.find fenv f).code genv fenv local_fun_env in if b then e else failwith "error calculation function value"
+    | Call(f, p) -> let local_fun_env = Hashtbl.create 100 in (*création d'un environnement local à la fonction*)
+                    try List.iter2 (fun x y -> let pvalue = eval_expr x genv fenv in Hashtbl.add local_fun_env (fst y) pvalue ) p (Hashtbl.find fenv f).params; (*association arguments valeurs*)
+                    let _, _, _, e, b = exec_function_code (Hashtbl.find fenv f).code genv fenv [local_fun_env] in if b then e else failwith "error calculation function value" (*calcul du code de la fonction*)
                     with Invalid_argument(_) -> failwith ("wrong arguments in function " ^ f) 
                     | Not_found -> failwith "Error function name"
 
-    | _ -> failwith "not implemented expr"
+    (*| _ -> failwith "not implemented expr 1"*)
 and exec_code i genv fenv lenv= 
   match i with
     | Set(x, e) ->
       let v = eval_code e genv fenv lenv in
-      let () = print_int v in
-      let () = Hashtbl.add lenv x v in 
-      genv, fenv, lenv, -1, false
+      begin
+        match lenv with
+        | env'::s -> Hashtbl.add env' x v; genv, fenv, env'::s, -1, false
+        | _ -> failwith "no local environnement"
+      end
     | If(e, b1, b2) ->
       let v = eval_code e genv fenv lenv in
       if v = 1
@@ -82,7 +84,8 @@ and eval_code e genv fenv lenv=
   match e with
     | Cst n -> n
     | BCst b -> if b then 1 else 0
-    | Get x -> let tmp = try Hashtbl.find lenv x with  Not_found -> Hashtbl.find genv x in tmp
+    | Get x -> let tmp = try List.find (fun env -> try let _ = Hashtbl.find env x in true with Not_found -> false) lenv with Not_found -> genv in
+               let tmp = try Hashtbl.find tmp x with Not_found -> failwith ("unknown variable "^x) in tmp
     | Add(e1, e2) ->
       let v1 = eval_code e1 genv fenv lenv in
       let v2 = eval_code e2 genv fenv lenv in
@@ -96,7 +99,12 @@ and eval_code e genv fenv lenv=
       let v2 = eval_code e2 genv fenv lenv in
       if v1 < v2 then 1 else 0
     | Null(_) -> -1  (*not initialised variable*)
-    | _ -> failwith "not implemented expr in recursion"
+    | Call(f, p) -> let local_fun_env = Hashtbl.create 100 in (*création d'un environnement local à la fonction*)
+                    try List.iter2 (fun x y -> let pvalue = eval_code x genv fenv lenv in Hashtbl.add local_fun_env (fst y) pvalue ) p (Hashtbl.find fenv f).params; (*association arguments valeurs*)
+                    let _, _, _, e, b = exec_function_code (Hashtbl.find fenv f).code genv fenv (local_fun_env::lenv) in if b then e else failwith "error calculation function value" (*calcul du code de la fonction*)
+                    with Invalid_argument(_) -> failwith ("wrong arguments in function " ^ f) 
+                    | Not_found -> failwith "Error function name"
+    (*| _ -> failwith "not implemented expr in recursion"*)
 
 
 
@@ -151,7 +159,7 @@ and execseq b genv fenv=
 let interpret prog =
 
   (*environnement global*)
-  let global_env = Hashtbl.create 1024 in
+  let global_env = Hashtbl.create 100 in
   (*//////////////////////////////*)
   (*ajout des variables globales :*)
   let rec add_globals g genv fenv = 
@@ -163,7 +171,7 @@ let interpret prog =
   
   (*///////////////////////////*)
   (*environnement des fonctions*)
-  let function_env = Hashtbl.create 1024 in
+  let function_env = Hashtbl.create 100 in
 
   (*ajout des fonctions :*)
   let rec add_functions f genv fenv=
