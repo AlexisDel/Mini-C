@@ -1,26 +1,53 @@
 (* Utils *)
-let string_to_list s =
-  let rec exp i l =
-    if i < 0 then l 
-    else exp (i - 1) (s.[i] :: l) in exp (String.length s - 1) []
+let minimum a b c =
+  min a (min b c)
 
 (* Auto-suggestion *)
-exception Not_close_match
 
-let rec common_letters s1 s2 = match s1, s2 with 
-  | [] , _ -> 0
-  | _ , [] -> 0
-  | h1::t1, h2::t2 -> 
-      if (Char.equal h1 h2) then 1 + common_letters t1 t2
-      else common_letters t1 t2
+exception No_close_match
+
+
+let levenshtein_distance s t =
+  let m = String.length s
+  and n = String.length t in
+  (* for all i and j, d.(i).(j) will hold the Levenshtein distance between
+     the first i characters of s and the first j characters of t *)
+  let d = Array.make_matrix (m+1) (n+1) 0 in
+
+  for i = 0 to m do
+    d.(i).(0) <- i  (* the distance of any first string to an empty second string *)
+  done;
+  for j = 0 to n do
+    d.(0).(j) <- j  (* the distance of any second string to an empty first string *)
+  done;
+
+  for j = 1 to n do
+    for i = 1 to m do
+
+      if s.[i-1] = t.[j-1] then
+        d.(i).(j) <- d.(i-1).(j-1)  (* no operation required *)
+      else
+        d.(i).(j) <- minimum
+            (d.(i-1).(j) + 1)   (* a deletion *)
+            (d.(i).(j-1) + 1)   (* an insertion *)
+            (d.(i-1).(j-1) + 1) (* a substitution *)
+    done;
+  done;
+
+  d.(m).(n)
+
 
 let find_best_match w l = 
-  let best_match = List.find_opt (fun (v,_) -> (common_letters (string_to_list w) (string_to_list v)) > 2) l in
-  
-  match best_match with
-    | None -> raise Not_close_match
-    | Some (v,_) -> ("Did you mean '"^v^"' ?")
+  let best_match = List.fold_left 
+  (fun (current_best_match, current_best_ldist) (v,_) -> 
+    let ldist = levenshtein_distance v w in if ldist < current_best_ldist then (v,ldist) else (current_best_match, current_best_ldist)) 
+  ("",100) l in
+  if (snd best_match) > 2 then raise No_close_match else fst best_match
 
-let did_u_mean v local_env global_env =
-      (* Donne la priorité au var locales *)      
-      try find_best_match v local_env with Not_close_match -> try find_best_match v global_env with Not_close_match -> (v^" : Unboud Value")
+(* Remarque :  
+   La priorité est donnée à l'enviornement local, càd : si on a "longueur1" une var globale et "longueur2" une var locale, alors find_best_match(longueur) = longueur2
+   L'ordre est donné via l'ordre de concaténation : (Env.bindings local_env)@(Env.bindings global_env)
+   NB : btw, sans doute pas la meilleur chose à faire, but if it works, it works
+ *)
+let did_u_mean v env =  
+    try ("Did you mean '" ^ (find_best_match v env) ^ "' ?") with No_close_match -> (v^" : Unboud Value")

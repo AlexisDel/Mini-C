@@ -13,13 +13,15 @@ let typecheck_program (prog: prog) =
   (* Vérification du bon typage et calcul du type d'une expression.
        À nouveau, fonction locale avec accès à tout ce qui est au-dessus. *)
   let rec type_expr local_env = function
-    | Null(v) -> let ty, _ = try Env.find v local_env with Not_found -> Env.find v global_env in ty
+    | Null(v) -> let ty, _ = try Env.find v local_env with Not_found -> try Env.find v global_env with Not_found -> 
+                                  failwith (did_u_mean v ((Env.bindings local_env)@(Env.bindings global_env)) ) in ty
     | Cst _ -> Int
     | BCst _ -> Bool
     | Add(e1,e2) -> if(type_expr local_env e1 = Int && type_expr local_env e2 = Int) then Int else failwith "type error"
     | Mul(e1,e2) -> if(type_expr local_env e1 = Int && type_expr local_env e2 = Int) then Int else failwith "type error"
     | Lt(e1,e2) -> if(type_expr local_env e1 = Int && type_expr local_env e2 = Int) then Bool else failwith "type error"
-    | Get(v) -> let ty, e = try Env.find v local_env with Not_found -> Env.find v global_env in 
+    | Get(v) -> let ty, e = try Env.find v local_env with Not_found -> try Env.find v global_env with Not_found -> 
+                                  failwith (did_u_mean v ((Env.bindings local_env)@(Env.bindings global_env)) ) in
                     if ty = type_expr local_env e then ty else failwith "type error"
     | Call(f,p) -> let fu = List.find (fun x -> x.name = f) (prog.functions) in
                    List.iter2 (fun e p -> if type_expr local_env e <> (snd p) then failwith "params type error") p (fu.params);
@@ -58,7 +60,8 @@ let typecheck_program (prog: prog) =
     let rec typecheck_instr local_env = function
       | Skip -> ()
       | Putchar(e) -> if type_expr local_env e <> Int then failwith "type error"
-      | Set(v,e) -> let ty, _ = try Env.find v local_env with Not_found -> try Env.find v global_env with Not_found -> failwith (did_u_mean v (Env.bindings local_env) (Env.bindings global_env) ) in
+      | Set(v,e) -> let ty, _ = try Env.find v local_env with Not_found -> try Env.find v global_env with Not_found -> 
+                                  failwith (did_u_mean v ((Env.bindings local_env)@(Env.bindings global_env)) ) in
                     if ty <> type_expr local_env e then failwith "type error"
       | If(e,s1,s2) -> if type_expr local_env e <> Bool then failwith "type error"
                        else
