@@ -16,16 +16,12 @@ int foo(int a, int b){
 	}
 }
 
-int main(){
-	putchar(a+b+id(a + b));
-	putchar(15);
-	putchar(foo(4, 12));
-	putchar(foo(10, 10));
-	putchar(3 * 4 + 1 * 8);
-	for(int i = 0; i < 3; i = i + 1){
-		for(int j = 0; j < 3; j = j + 1){
-			putchar(i+j);
-		}
+int test(int a){
+	putchar(a); 
+	return a;
 	}
-	return 0;
+
+int main(){
+	putchar(test(17));
+	return test(5);
 }
