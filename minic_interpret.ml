@@ -45,20 +45,16 @@ and eval_expr e genv fenv=
     | Call(f, p) -> let local_fun_env = Hashtbl.create 100 in (*création d'un environnement local à la fonction*)
                     try List.iter2 (fun x y -> let pvalue = eval_expr x genv fenv in Hashtbl.add local_fun_env (fst y) pvalue ) p (Hashtbl.find fenv f).params; (*association arguments valeurs*)
                     List.iter (fun (x,_,e) -> Hashtbl.add local_fun_env x (eval_expr e genv fenv)) (Hashtbl.find fenv f).locals; (*ajout des variables locales à l'environnement local*)
-                    let _, _, _, e, b = exec_function_code (Hashtbl.find fenv f).code genv fenv [local_fun_env] in if b then e else failwith "error calculation function value" (*calcul du code de la fonction*)
+                    let _, _, _, e, b = exec_function_code (Hashtbl.find fenv f).code genv fenv [local_fun_env] in if b then e else if (Hashtbl.find fenv f).return = Void then -1
+                    else failwith "error calculation function value" (*calcul du code de la fonction*)
                     with Invalid_argument(_) -> failwith ("wrong arguments in function " ^ f) 
                     | Not_found -> failwith "Error function name"
-
-    (*| _ -> failwith "not implemented expr 1"*)
 and exec_code i genv fenv lenv= 
   match i with
     | Set(x, e) ->
       let v = eval_code e genv fenv lenv in
-      begin
-        match lenv with
-        | env'::s -> Hashtbl.replace env' x v; genv, fenv, env'::s, -1, false
-        | _ -> failwith "no local environnement"
-      end
+      let tmp = try List.find (fun env -> try let _ = Hashtbl.find env x in true with Not_found -> false) lenv with Not_found -> genv in
+      Hashtbl.replace tmp x v; genv, fenv, lenv, -1, false
     | If(e, b1, b2) ->
       let v = eval_code e genv fenv lenv in
       if v = 1
@@ -86,7 +82,7 @@ and exec_code i genv fenv lenv=
     | Putchar(e) -> let tmp = eval_code e genv fenv lenv in
                     print_int tmp; print_string "\n"; genv, fenv, lenv, -1, false
     | Return(e) -> let tmp = eval_code e genv fenv lenv in genv, fenv, lenv, tmp, true
-    |_ -> failwith  "not implemented instr"
+    | Expr(e) -> let tmp = eval_code e genv fenv lenv in genv, fenv, lenv, tmp, false
 
 and exec_function_code b genv fenv lenv= 
   match b with
@@ -115,10 +111,10 @@ and eval_code e genv fenv lenv=
     | Call(f, p) -> let local_fun_env = Hashtbl.create 100 in (*création d'un environnement local à la fonction*)
                     try List.iter2 (fun x y -> let pvalue = eval_code x genv fenv lenv in Hashtbl.add local_fun_env (fst y) pvalue ) p (Hashtbl.find fenv f).params; (*association arguments valeurs*)
                     List.iter (fun (x,_,e) -> Hashtbl.add local_fun_env x (eval_code e genv fenv lenv)) (Hashtbl.find fenv f).locals; (*ajout des variables locales à l'environnement local*)
-                    let _, _, _, e, b = exec_function_code (Hashtbl.find fenv f).code genv fenv (local_fun_env::lenv) in if b then e else failwith "error calculation function value" (*calcul du code de la fonction*)
+                    let _, _, _, e, b = exec_function_code (Hashtbl.find fenv f).code genv fenv (local_fun_env::lenv) in if b then e else if (Hashtbl.find fenv f).return = Void then -1
+                    else failwith "error calculation function value" (*calcul du code de la fonction*)
                     with Invalid_argument(_) -> failwith ("wrong arguments in function " ^ f) 
                     | Not_found -> failwith "Error function name"
-    (*| _ -> failwith "not implemented expr in recursion"*)
 
 (*****************************************************)
 (*évaluation des instruction et listes d'instructions*)
@@ -126,7 +122,7 @@ and execinstr i genv fenv =
   match i with
     | Set(x, e) ->
       let v = eval_expr e genv fenv in
-      let () = Hashtbl.add genv x v in 
+      let () = Hashtbl.replace genv x v in 
       genv, fenv
     | If(e, b1, b2) ->
       let v = eval_expr e genv fenv in
@@ -153,7 +149,7 @@ and execinstr i genv fenv =
     | Putchar(e) -> let tmp = eval_expr e genv fenv in
                     print_int tmp; print_string "\n"; genv, fenv
     | Return(e) -> let _ = eval_expr e genv fenv in genv, fenv
-    |_ -> failwith  "not implemented instr"
+    | Expr(e) ->let _ = eval_expr e genv fenv in genv, fenv
 
 and execseq b genv fenv= 
 	match b with
