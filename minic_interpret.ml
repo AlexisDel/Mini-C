@@ -63,7 +63,7 @@ and exec_code i genv fenv lenv=
       let v = eval_code e genv fenv lenv in
       if v = 1
       then exec_function_code b1 genv fenv lenv
-      else exec_function_code b2 genv fenv lenv
+      else let tmp = try exec_function_code b2 genv fenv lenv with ExcepSkip -> genv, fenv, lenv, -1, false in tmp
     | While(e, b) ->
       begin
         try 
@@ -133,7 +133,7 @@ and execinstr i genv fenv =
       let v = eval_expr e genv fenv in
       if v = 1
       then execseq b1 genv fenv
-      else execseq b2 genv fenv
+      else let tmp = try execseq b2 genv fenv  with ExcepSkip -> genv, fenv in tmp
     | While(e, b) ->
       begin
         try 
@@ -153,7 +153,7 @@ and execinstr i genv fenv =
     | Skip -> raise ExcepSkip
     | Putchar(e) -> let tmp = eval_expr e genv fenv in
                     print_int tmp; print_string "\n"; genv, fenv
-    | Return(_) -> genv, fenv
+    | Return(e) -> let _ = eval_expr e genv fenv in genv, fenv
     |_ -> failwith  "not implemented instr"
 
 and execseq b genv fenv= 
@@ -197,7 +197,8 @@ let interpret prog =
 
   let interpret_main main genv fenv=
     match main with
-      |[main] -> execseq main.code genv fenv
+      |[main] ->  List.iter (fun (x,_,e) -> Hashtbl.add genv x (eval_expr e genv fenv)) main.locals; (*ajout des variables locales à la fonction main à l'environnement global*)
+                  execseq main.code genv fenv
       |_ -> failwith "error in main interpretation"
   in
   let _, _ = interpret_main prog.main global_env function_env in
