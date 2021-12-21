@@ -16,7 +16,15 @@ type env = (string, int) Hashtbl.t
 
 (*évaluation d'une expression :*)
 
-let rec eval_expr e genv fenv=
+let rec for_func genv fenv lenv stop s =
+  let b = eval_code stop genv fenv lenv in
+  if b = 1 then let genv', fenv', lenv', res, flag = exec_function_code s genv fenv lenv in
+    begin
+      if flag then genv', fenv', lenv', res, flag else for_func genv' fenv' lenv' stop s
+    end
+  else genv, fenv, lenv, -1, false
+
+and eval_expr e genv fenv=
 	match e with
 	  | Cst n -> n
     | BCst b -> if b then 1 else 0
@@ -36,6 +44,7 @@ let rec eval_expr e genv fenv=
     | Null(_) -> -1  (*not initialised variable*)
     | Call(f, p) -> let local_fun_env = Hashtbl.create 100 in (*création d'un environnement local à la fonction*)
                     try List.iter2 (fun x y -> let pvalue = eval_expr x genv fenv in Hashtbl.add local_fun_env (fst y) pvalue ) p (Hashtbl.find fenv f).params; (*association arguments valeurs*)
+                    List.iter (fun (x,_,e) -> Hashtbl.add local_fun_env x (eval_expr e genv fenv)) (Hashtbl.find fenv f).locals; (*ajout des variables locales à l'environnement local*)
                     let _, _, _, e, b = exec_function_code (Hashtbl.find fenv f).code genv fenv [local_fun_env] in if b then e else failwith "error calculation function value" (*calcul du code de la fonction*)
                     with Invalid_argument(_) -> failwith ("wrong arguments in function " ^ f) 
                     | Not_found -> failwith "Error function name"
@@ -47,7 +56,7 @@ and exec_code i genv fenv lenv=
       let v = eval_code e genv fenv lenv in
       begin
         match lenv with
-        | env'::s -> Hashtbl.add env' x v; genv, fenv, env'::s, -1, false
+        | env'::s -> Hashtbl.replace env' x v; genv, fenv, env'::s, -1, false
         | _ -> failwith "no local environnement"
       end
     | If(e, b1, b2) ->
@@ -69,6 +78,10 @@ and exec_code i genv fenv lenv=
                               if b then genv', fenv, lenv, e, b else exec_code i genv' fenv lenv
           | _ -> failwith "unknown exception"
       end
+    | For(v,e,s) -> let x_v, _, e_v = v in
+                    let env_for = Hashtbl.create 100 in
+                    let () = Hashtbl.add env_for x_v (eval_code e_v genv fenv lenv) in
+                    for_func genv fenv (env_for::lenv) e s
     | Skip -> raise ExcepSkip
     | Putchar(e) -> let tmp = eval_code e genv fenv lenv in
                     print_int tmp; print_string "\n"; genv, fenv, lenv, -1, false
@@ -86,7 +99,7 @@ and eval_code e genv fenv lenv=
     | BCst b -> if b then 1 else 0
     | Get x -> let tmp = try List.find (fun env -> try let _ = Hashtbl.find env x in true with Not_found -> false) lenv with Not_found -> genv in
                let tmp = try Hashtbl.find tmp x with Not_found -> failwith ("unknown variable "^x) in tmp
-    | Add(e1, e2) ->
+    | Add(e1, e2) -> 
       let v1 = eval_code e1 genv fenv lenv in
       let v2 = eval_code e2 genv fenv lenv in
       v1 + v2
@@ -101,22 +114,15 @@ and eval_code e genv fenv lenv=
     | Null(_) -> -1  (*not initialised variable*)
     | Call(f, p) -> let local_fun_env = Hashtbl.create 100 in (*création d'un environnement local à la fonction*)
                     try List.iter2 (fun x y -> let pvalue = eval_code x genv fenv lenv in Hashtbl.add local_fun_env (fst y) pvalue ) p (Hashtbl.find fenv f).params; (*association arguments valeurs*)
+                    List.iter (fun (x,_,e) -> Hashtbl.add local_fun_env x (eval_code e genv fenv lenv)) (Hashtbl.find fenv f).locals; (*ajout des variables locales à l'environnement local*)
                     let _, _, _, e, b = exec_function_code (Hashtbl.find fenv f).code genv fenv (local_fun_env::lenv) in if b then e else failwith "error calculation function value" (*calcul du code de la fonction*)
                     with Invalid_argument(_) -> failwith ("wrong arguments in function " ^ f) 
                     | Not_found -> failwith "Error function name"
     (*| _ -> failwith "not implemented expr in recursion"*)
 
-
-
-
-
-
-
-
-  
 (*****************************************************)
 (*évaluation des instruction et listes d'instructions*)
-let rec execinstr i genv fenv = 
+and execinstr i genv fenv = 
   match i with
     | Set(x, e) ->
       let v = eval_expr e genv fenv in
@@ -142,6 +148,8 @@ let rec execinstr i genv fenv =
                               execinstr i genv' fenv
           | _ -> failwith "unknown exception"
       end
+    | For(v,e,s) -> let genv, fenv, _, _, _ = exec_function_code ([For(v, e, s)]) genv fenv [] in
+                    genv, fenv
     | Skip -> raise ExcepSkip
     | Putchar(e) -> let tmp = eval_expr e genv fenv in
                     print_int tmp; print_string "\n"; genv, fenv
