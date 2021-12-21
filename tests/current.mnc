@@ -1,12 +1,6 @@
-int longueur1 = 0;
-
-int test(int i, int a){
-  putchar(i);
-  return i;
-}
-
 int main(){
-  test(2,2,3);
+  int a = 1;
+  int b = a;
   
   return 0;
 }

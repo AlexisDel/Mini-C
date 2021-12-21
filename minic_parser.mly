@@ -20,9 +20,11 @@
 %token LT
 %token PUTCHAR
 %token EOF
+
 %nonassoc LT
 %left PLUS
 %left TIMES
+
 
 %start program
 %type <Minic_ast.prog> program
@@ -89,6 +91,7 @@ function_decl:
 main_decl:
 |t = typ MAIN LPAR RPAR BEGIN v=list(variable_decl) s=list(instruction) END {{name = "main" ; code = s ; params = [] ; return = t; locals = v}}
 ;
+
 params:
 | t=typ x=IDENT COMMA { (x, t) }
 | t=typ x=IDENT { (x, t) }
@@ -99,17 +102,8 @@ params:
    À COMPLÉTER
 *)
 
-error_semi:
-| PUTCHAR LPAR expression RPAR {}
-| IDENT SET IDENT {}
-| IDENT SET expression {}
-| RETURN expression {}
-| expression {}
-;
-
 instruction:
 | PUTCHAR LPAR e=expression RPAR SEMI { Putchar(e) }
-| x=IDENT SET n=IDENT SEMI { Set(x,Get(n)) }
 | x=IDENT SET e=expression SEMI { Set(x,e) }
 | IF LPAR e=expression RPAR BEGIN s1=list(instruction) END { If(e, s1, [Skip])}
 | IF LPAR e=expression RPAR BEGIN s1=list(instruction) END ELSE BEGIN s2=list(instruction) END { If(e,s1,s2) }
@@ -118,13 +112,9 @@ instruction:
 | RETURN e=expression SEMI { Return(e) }
 | e=expression SEMI { Expr(e) }
 
-| error_semi { let pos = $startpos in
-          let message =
-            Printf.sprintf
-              "Syntax error at %d, %d, Missing semicolon ?"
-              pos.pos_lnum (pos.pos_cnum - pos.pos_bol)
-          in
-          failwith message }
+(* Erreurs *)
+| error SEMI  { failwith "Bad expression" }
+| error { failwith "Missing semicolumn ?" }
 ;
 
 indentation:
