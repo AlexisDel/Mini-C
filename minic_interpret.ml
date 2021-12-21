@@ -126,7 +126,6 @@ and execinstr i genv fenv =
   match i with
     | Set(x, e) ->
       let v = eval_expr e genv fenv in
-      let () = print_int v in
       let () = Hashtbl.add genv x v in 
       genv, fenv
     | If(e, b1, b2) ->

@@ -21,7 +21,13 @@ int test(int a){
 	return a;
 	}
 
+void v(int a, int b){putchar(a + b);}
+
 int main(){
-	putchar(test(17));
-	return test(5);
+	int a = 117;
+	a = 11117;
+	putchar(test(a));
+	putchar(12);
+	v(1000, 0);
+	return 5;
 }

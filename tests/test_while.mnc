@@ -1,0 +1,8 @@
+int main(){
+	int a = 10;
+	while(a < 21){
+		putchar(a);
+		a = a + 2;
+	}
+	return 0;
+}

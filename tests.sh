@@ -9,3 +9,4 @@ dune build && ./_build/default/minic.exe tests/test_0.mnc
 ./_build/default/minic.exe tests/test_for.mnc 
 ./_build/default/minic.exe tests/test_interpret.mnc 
 ./_build/default/minic.exe tests/test_prio.mnc 
+./_build/default/minic.exe tests/test_while.mnc 
