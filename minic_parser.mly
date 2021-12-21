@@ -109,13 +109,37 @@ instruction:
 | e=expression SEMI { Expr(e) }
 
 (* Erreurs *)
-| error SEMI  { let pos = $startpos in failwith (print_error_message_with_position "" pos) }
-| error { let pos = $startpos in failwith (print_error_message_with_position ", missing semicolumn ?" pos) }
+| lpar_error { let pos = $startpos in failwith (print_error_message_with_position ", \"(\" expected" pos) }
+| rpar_error { let pos = $startpos in failwith (print_error_message_with_position ", \")\" expected" pos) }
+| semi_error { let pos = $startpos in failwith (print_error_message_with_position ", missing semicolumn ?" pos) }
+| error { let pos = $startpos in failwith (print_error_message_with_position "" pos) }
 ;
+
+lpar_error:
+| PUTCHAR error {}
+| IF error {}
+| WHILE error {}
+| FOR error {}
+;
+
+rpar_error:
+| PUTCHAR LPAR expression error {}
+| IF LPAR expression error {}
+| WHILE LPAR expression error {}
+| FOR LPAR variable_decl expression SEMI indentation error {}
+;
+
+semi_error:
+| PUTCHAR LPAR expression RPAR error {}
+| IDENT SET expression error {}
+| RETURN expression error {}
+| expression error {}
+;
+
 
 indentation:
 | x=IDENT SET e=expression { Set(x,e) }
-
+;
 (* Expressions.
 
    À COMPLÉTER
