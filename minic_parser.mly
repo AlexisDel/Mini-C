@@ -15,9 +15,14 @@
 %token IF ELSE WHILE FOR
 %token SEMI COMMA
 %token INT BOOL VOID
-%token PLUS TIMES LT
+%token TIMES
+%token PLUS 
+%token LT
 %token PUTCHAR
 %token EOF
+%nonassoc LT
+%left PLUS
+%left TIMES
 
 %start program
 %type <Minic_ast.prog> program

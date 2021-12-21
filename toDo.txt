@@ -1,24 +1,13 @@
 
 Thomas : 
--fonction qui transforme :
-
-int a = 5;
-if(true){a = 6;}
-else{...;}
-...
-
-en :
-int a = 5;
-void foo(){
-	if(true){a = 6;}
-	else{...;}
-}
-...
 
 -les fonctions typées sans return ne posent pas de pb alors que normalement si
 
 -typechecker doit vérif type instruction si contient return (ex while avec return)
 
+-ajout du type string, et modification des env de string, int hashtbl en string, Result hashtbl où Result est un Type I of int | S of string | N #N pour null
+	-> putchar peut afficher des string et donc print_string ... 
+-interpret for 
 
 
 
@@ -32,3 +21,4 @@ Alexis :
 
 Général:
 - régler les confits à base SLR(1) et %left ...
+ ex : 3 * 3 + 3 * 3 donne le mauvais résultat

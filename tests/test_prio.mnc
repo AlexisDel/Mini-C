@@ -1,0 +1,13 @@
+
+int main(){
+	putchar(20);
+	putchar(3 * 4 + 1 * 8);
+	putchar(10);
+	putchar(1 + 2 + 3 + 4);
+	putchar(15);
+	putchar(1 + 2 + 3 * 4);
+	putchar(9);
+	putchar(4 * 1 + 2 + 3);
+	
+	return 0;
+}

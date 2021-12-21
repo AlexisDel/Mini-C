@@ -21,5 +21,6 @@ int main(){
 	putchar(15);
 	putchar(foo(4, 12));
 	putchar(foo(10, 10));
+	putchar(3 * 4 + 1 * 8);
 	return 0;
 }
