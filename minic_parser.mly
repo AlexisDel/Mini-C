@@ -3,6 +3,8 @@
   open Lexing
   open Minic_ast
 
+  let print_error_message_with_position message pos = (Printf.sprintf "Syntax error at %d, %d" pos.pos_lnum (pos.pos_cnum - pos.pos_bol))^message
+
 %}
 
 (* Déclaration des lexèmes *)
@@ -38,13 +40,7 @@ program:
 | dl=declaration_list EOF
        { let var_list, fun_list, m = dl in
          { globals = var_list; functions = fun_list; main = m} }
-| error { let pos = $startpos in
-          let message =
-            Printf.sprintf
-              "Syntax error at %d, %d"
-              pos.pos_lnum (pos.pos_cnum - pos.pos_bol)
-          in
-          failwith message }
+| error { let pos = $startpos in failwith (print_error_message_with_position "" pos) }
 ;
 
 (* Chaque déclaration peut concerner une variable ou une fonction. *)
@@ -113,8 +109,8 @@ instruction:
 | e=expression SEMI { Expr(e) }
 
 (* Erreurs *)
-| error SEMI  { failwith "Bad expression" }
-| error { failwith "Missing semicolumn ?" }
+| error SEMI  { let pos = $startpos in failwith (print_error_message_with_position "" pos) }
+| error { let pos = $startpos in failwith (print_error_message_with_position ", missing semicolumn ?" pos) }
 ;
 
 indentation:
