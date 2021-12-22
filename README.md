@@ -7,7 +7,7 @@ Dans ce projet, nous avons construit la partie frontend d'un compilateur pour le
 2. [Gestion des erreurs approfondie](#Error-Handling)
 3. [Interpréteur Mini-C](#Interpréteur)
 
-⚠️ Les tests sont exécutables via les scripts `test_compilo.sh` & `test_interprete.sh` 
+⚠️ Les tests sont exécutables via les scripts `test_compilo.sh` & `test_interprete.sh` sous linux.
 
 ## Noyeau Mini-C
 :page_facing_up: 
