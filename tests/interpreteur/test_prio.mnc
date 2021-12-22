@@ -1,5 +1,6 @@
 
 int main(){
+	putchar("affiche un nombre puis un résultat arithmétique supposé égale !");
 	putchar(20);
 	putchar(3 * 4 + 1 * 8);
 	putchar(10);

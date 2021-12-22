@@ -1,0 +1,13 @@
+	
+
+
+int main(){
+	putchar("affiche un entier, une mot et un booléen :");
+	putchar(5);
+	putchar("maison");
+	putchar(true);
+	return 0;
+}
+
+
+

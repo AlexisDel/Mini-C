@@ -18,7 +18,5 @@ void f2(){
 }
 
 int main(){
-	f1(10, 12);
-	f2();
 	return 0;
 }

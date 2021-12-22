@@ -5,6 +5,5 @@ string foo(){
 }
 int main(){
 	string t = foo();
-	putchar(t);
 	return 0;
 }
