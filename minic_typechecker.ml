@@ -20,6 +20,10 @@ let typecheck_program (prog: prog) =
     | Add(e1,e2) -> if(type_expr local_env e1 = Int && type_expr local_env e2 = Int) then Int else failwith "type error"
     | Mul(e1,e2) -> if(type_expr local_env e1 = Int && type_expr local_env e2 = Int) then Int else failwith "type error"
     | Lt(e1,e2) -> if(type_expr local_env e1 = Int && type_expr local_env e2 = Int) then Bool else failwith "type error"
+    | Eg(e1, e2) -> let t1, t2 = type_expr local_env e1, type_expr local_env e2 in if t1=t2 then Bool else failwith "type error"
+    | And(e1, e2) -> if(type_expr local_env e1 = Bool && type_expr local_env e2 = Bool) then Bool else failwith "type error"
+    | Or(e1, e2) -> if(type_expr local_env e1 = Bool && type_expr local_env e2 = Bool) then Bool else failwith "type error"
+    | Not(e1) -> if type_expr local_env e1 = Bool  then Bool else failwith "type error"
     | Get(v) -> let ty, e = try Env.find v local_env with Not_found -> try Env.find v global_env with Not_found -> 
                                 failwith (did_u_mean v (bindings_to_var_names (Env.bindings local_env) (Env.bindings global_env)) ) in
                     if ty = type_expr local_env e then ty else failwith "type error"

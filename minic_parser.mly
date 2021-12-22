@@ -20,12 +20,20 @@
 %token TIMES
 %token PLUS 
 %token LT
+%token EG
+%token OR
+%token AND
+%token NOT
 %token PUTCHAR
 %token EOF
 
+%nonassoc EG
 %nonassoc LT
 %left PLUS
 %left TIMES
+%left OR
+%left AND
+%nonassoc NOT
 
 
 %start program
@@ -152,6 +160,10 @@ expression:
 | e1=expression LT e2=expression { Lt(e1, e2) }
 | x=IDENT { Get(x) }
 | f=IDENT LPAR a=list(args) RPAR { Call(f,a) }
+| e1=expression EG e2=expression { Eg(e1, e2) }
+| e1=expression OR e2=expression { Or(e1, e2) }
+| e1=expression AND e2=expression { And(e1, e2) }
+| NOT e1=expression { Not(e1) }
 ;
 
 args:

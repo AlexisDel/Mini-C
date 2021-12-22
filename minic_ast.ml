@@ -15,6 +15,10 @@ type expr =
   | Lt  of expr * expr
   | Get of string
   | Call of string * expr list
+  | Eg of expr * expr
+  | And of expr * expr  
+  | Or of expr * expr
+  | Not of expr
 
 (* Représentation des instructions et séquences. *)
 type instr =

@@ -41,6 +41,17 @@ and eval_expr e genv fenv=
       let v1 = eval_expr e1 genv fenv in
       let v2 = eval_expr e2 genv fenv in
       if v1 < v2 then 1 else 0
+    | Eg(e1, e2) -> let v1 = eval_expr e1 genv fenv in
+      let v2 = eval_expr e2 genv fenv in
+      if v1 = v2 then 1 else 0
+    | And(e1, e2) -> let v1 = eval_expr e1 genv fenv in
+      let v2 = eval_expr e2 genv fenv in
+      if v1 + v2 > 1 then 1 else 0
+    | Or(e1, e2) -> let v1 = eval_expr e1 genv fenv in
+      let v2 = eval_expr e2 genv fenv in
+      if v1 + v2 > 0 then 1 else 0
+    | Not(e1) -> let v1 = eval_expr e1 genv fenv in
+      if v1 = 1 then 0 else 1
     | Null(_) -> -1  (*not initialised variable*)
     | Call(f, p) -> let local_fun_env = Hashtbl.create 100 in (*création d'un environnement local à la fonction*)
                     try List.iter2 (fun x y -> let pvalue = eval_expr x genv fenv in Hashtbl.add local_fun_env (fst y) pvalue ) p (Hashtbl.find fenv f).params; (*association arguments valeurs*)
@@ -107,6 +118,17 @@ and eval_code e genv fenv lenv=
       let v1 = eval_code e1 genv fenv lenv in
       let v2 = eval_code e2 genv fenv lenv in
       if v1 < v2 then 1 else 0
+    | Eg(e1, e2) -> let v1 = eval_code e1 genv fenv lenv in
+      let v2 = eval_code e2 genv fenv lenv in
+      if v1 = v2 then 1 else 0
+    | And(e1, e2) -> let v1 = eval_code e1 genv fenv lenv in
+      let v2 = eval_code e2 genv fenv lenv in
+      if v1 + v2 > 1 then 1 else 0
+    | Or(e1, e2) -> let v1 = eval_code e1 genv fenv lenv in
+      let v2 = eval_code e2 genv fenv lenv in
+      if v1 + v2 > 0 then 1 else 0
+    | Not(e1) -> let v1 = eval_code e1 genv fenv lenv in
+      if v1 = 1 then 0 else 1
     | Null(_) -> -1  (*not initialised variable*)
     | Call(f, p) -> let local_fun_env = Hashtbl.create 100 in (*création d'un environnement local à la fonction*)
                     try List.iter2 (fun x y -> let pvalue = eval_code x genv fenv lenv in Hashtbl.add local_fun_env (fst y) pvalue ) p (Hashtbl.find fenv f).params; (*association arguments valeurs*)

@@ -4,7 +4,13 @@ bool B = true;
 int f() {
   return 0;
 }
+bool fun(){
+	bool a = true;
+	bool b = false;
+	return 3 == 4;
+}
 
 int main(){
+	if(fun()){putchar(5);}
 	return 0;
 }
