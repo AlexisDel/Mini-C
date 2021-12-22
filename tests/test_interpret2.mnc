@@ -1,0 +1,29 @@
+int MAX = 6;
+
+void print_s_n_fois(string s, int n){
+	for(int i = 0; i < n; i=i+1){
+		putchar(s);
+	}
+}
+
+int fibo(int n){
+	if(n == 0){
+		return 1;
+	}
+	else{
+		if(n == 1){
+			return 1;
+		}
+		else{
+			return fibo(n + -1) + fibo(n + -2);
+		}
+	}
+}
+
+int main(){
+	for(int i = 0; i < MAX; i=i+1){
+		print_s_n_fois("FIBO", fibo(i));
+		putchar("PAUSE");
+	}
+	return 0;
+}
