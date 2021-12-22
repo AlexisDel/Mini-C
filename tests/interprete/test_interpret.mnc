@@ -1,10 +1,9 @@
 int MAX = 11;	
 
-
 int main(){
-	putchar("puissances de 2 :");
 	int cpt = 0;
 	int i = 1;
+	putchar("puissances de 2 :");
 	while(cpt < MAX){
 		putchar(i);
 		cpt = cpt + 1;
@@ -12,6 +11,3 @@ int main(){
 	}
 	return 0;
 }
-
-
-
