@@ -1,16 +1,19 @@
 int PARAM = 5;
-bool B = true;
+bool b = false;
 
-int f() {
-  return 0;
-}
-bool fun(){
+bool fun1(){
 	bool a = true;
-	bool b = false;
-	return 3 == 4;
+	return b || b == a && b;
+}
+
+bool fun2(){
+	int a = 5;
+	int PARAM = 34;
+	return a == PARAM;
 }
 
 int main(){
-	if(fun()){putchar(5);}
+	if(fun1()){putchar(PARAM);}
+	if(!fun2()){putchar(PARAM);}
 	return 0;
 }
