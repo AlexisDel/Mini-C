@@ -1,0 +1,10 @@
+string a = "aaa";
+
+string foo(){
+	return "bonjour ca va ?";
+}
+int main(){
+	string t = foo();
+	putchar(t);
+	return 0;
+}

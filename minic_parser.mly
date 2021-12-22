@@ -12,11 +12,12 @@
 %token <int> CST
 %token <bool> BOOL_CST
 %token <string> IDENT
+%token <string> STR
 %token LPAR RPAR BEGIN END
 %token RETURN SET
 %token IF ELSE WHILE FOR
 %token SEMI COMMA
-%token INT BOOL VOID
+%token INT BOOL VOID STRING
 %token TIMES
 %token PLUS 
 %token LT
@@ -80,6 +81,7 @@ typ:
 | INT { Int }
 | BOOL { Bool }
 | VOID { Void }
+| STRING { String }
 ;
 
 (* Déclaration de fonction.
@@ -155,6 +157,7 @@ indentation:
 expression:
 | n=CST { Cst(n) }
 | b=BOOL_CST { BCst(b) }
+| s=STR { Str(s) }
 | e1=expression PLUS e2=expression { Add(e1, e2) }
 | e1=expression TIMES e2=expression { Mul(e1, e2) }
 | e1=expression LT e2=expression { Lt(e1, e2) }

@@ -3,6 +3,7 @@ type typ =
   | Int
   | Bool
   | Void
+  | String
 
 (* Représentation des expressions.
    Ajouté : les constantes booléennes. *)
@@ -10,6 +11,7 @@ type expr =
   | Null of string
   | Cst of int
   | BCst of bool
+  | Str of string
   | Add of expr * expr
   | Mul of expr * expr
   | Lt  of expr * expr

@@ -17,6 +17,7 @@ let typ_to_string t = match t with
   | Int -> "int"
   | Bool -> "bool"
   | Void -> "void"
+  | String -> "string"
 
 let fun_def_to_arguments_as_string params = 
   fst (List.fold_left (fun (acc,b) (n,t) -> 

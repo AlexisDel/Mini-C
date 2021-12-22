@@ -13,50 +13,80 @@ exception ExcepSkip
 
 type env = (string, int) Hashtbl.t
 
+type result = I of int | B of bool | S of string | N
+
 
 (*évaluation d'une expression :*)
 
 let rec for_func genv fenv lenv stop s =
   let b = eval_code stop genv fenv lenv in
-  if b = 1 then let genv', fenv', lenv', res, flag = exec_function_code s genv fenv lenv in
+  if b = B(true) then let genv', fenv', lenv', res, flag = exec_function_code s genv fenv lenv in
     begin
       if flag then genv', fenv', lenv', res, flag else for_func genv' fenv' lenv' stop s
     end
-  else genv, fenv, lenv, -1, false
+  else genv, fenv, lenv, N, false
 
 and eval_expr e genv fenv=
 	match e with
-	  | Cst n -> n
-    | BCst b -> if b then 1 else 0
+	  | Cst n -> I(n)
+    | BCst b -> if b then B(true) else B(false)
+    | Str s -> S(s)
     | Get x -> Hashtbl.find genv x
     | Add(e1, e2) ->
       let v1 = eval_expr e1 genv fenv in
       let v2 = eval_expr e2 genv fenv in
-      v1 + v2
+      begin
+      match v1, v2 with
+        |I(v1), I(v2) -> I(v1 + v2)
+        |_, _ -> failwith "type error 1"
+      end
     | Mul(e1, e2) ->
       let v1 = eval_expr e1 genv fenv in
       let v2 = eval_expr e2 genv fenv in
-      v1 * v2
+      begin
+      match v1, v2 with
+        |I(v1), I(v2) -> I(v1 * v2)
+        |_, _ -> failwith "type error 2"
+      end
     | Lt(e1, e2) ->
       let v1 = eval_expr e1 genv fenv in
       let v2 = eval_expr e2 genv fenv in
-      if v1 < v2 then 1 else 0
+      begin
+      match v1, v2 with
+        |I(v1), I(v2) -> B(v1 < v2)
+        |_, _ -> failwith "type error 3"
+      end
     | Eg(e1, e2) -> let v1 = eval_expr e1 genv fenv in
       let v2 = eval_expr e2 genv fenv in
-      if v1 = v2 then 1 else 0
-    | And(e1, e2) -> let v1 = eval_expr e1 genv fenv in
+      B(v1 = v2)
+    | And(e1, e2) -> 
+      let v1 = eval_expr e1 genv fenv in
       let v2 = eval_expr e2 genv fenv in
-      if v1 + v2 > 1 then 1 else 0
-    | Or(e1, e2) -> let v1 = eval_expr e1 genv fenv in
+      begin
+        match v1, v2 with
+          |B(v1), B(v2) -> B(v1 && v2)
+          |_, _ -> failwith "type error,4"
+      end
+    | Or(e1, e2) -> 
+      let v1 = eval_expr e1 genv fenv in
       let v2 = eval_expr e2 genv fenv in
-      if v1 + v2 > 0 then 1 else 0
-    | Not(e1) -> let v1 = eval_expr e1 genv fenv in
-      if v1 = 1 then 0 else 1
-    | Null(_) -> -1  (*not initialised variable*)
+      begin
+        match v1, v2 with
+          |B(v1), B(v2) -> B(v1 || v2)
+          |_, _ -> failwith "type error 5"
+      end
+    | Not(e1) -> 
+      let v1 = eval_expr e1 genv fenv in
+      begin
+        match v1 with
+          |B(v1) -> B(not v1)
+          |_ -> failwith "type error 6"
+      end
+    | Null(_) -> N  (*not initialised variable*)
     | Call(f, p) -> let local_fun_env = Hashtbl.create 100 in (*création d'un environnement local à la fonction*)
                     try List.iter2 (fun x y -> let pvalue = eval_expr x genv fenv in Hashtbl.add local_fun_env (fst y) pvalue ) p (Hashtbl.find fenv f).params; (*association arguments valeurs*)
                     List.iter (fun (x,_,e) -> Hashtbl.add local_fun_env x (eval_expr e genv fenv)) (Hashtbl.find fenv f).locals; (*ajout des variables locales à l'environnement local*)
-                    let _, _, _, e, b = exec_function_code (Hashtbl.find fenv f).code genv fenv [local_fun_env] in if b then e else if (Hashtbl.find fenv f).return = Void then -1
+                    let _, _, _, e, b = exec_function_code (Hashtbl.find fenv f).code genv fenv [local_fun_env] in if b then e else if (Hashtbl.find fenv f).return = Void then N
                     else failwith "error calculation function value" (*calcul du code de la fonction*)
                     with Invalid_argument(_) -> failwith ("wrong arguments in function " ^ f) 
                     | Not_found -> failwith "Error function name"
@@ -65,18 +95,18 @@ and exec_code i genv fenv lenv=
     | Set(x, e) ->
       let v = eval_code e genv fenv lenv in
       let tmp = try List.find (fun env -> try let _ = Hashtbl.find env x in true with Not_found -> false) lenv with Not_found -> genv in
-      Hashtbl.replace tmp x v; genv, fenv, lenv, -1, false
+      Hashtbl.replace tmp x v; genv, fenv, lenv, N, false
     | If(e, b1, b2) ->
       let v = eval_code e genv fenv lenv in
-      if v = 1
+      if v = B(true)
       then exec_function_code b1 genv fenv lenv
-      else let tmp = try exec_function_code b2 genv fenv lenv with ExcepSkip -> genv, fenv, lenv, -1, false in tmp
+      else let tmp = try exec_function_code b2 genv fenv lenv with ExcepSkip -> genv, fenv, lenv, N, false in tmp
     | While(e, b) ->
       begin
         try 
           begin 
             let v = eval_code e genv fenv lenv in
-            if v = 0 then genv, fenv, lenv, -1, false
+            if v = B(false) then genv, fenv, lenv, N, false
             else let genv', fenv, lenv, e, b = exec_function_code b genv fenv lenv in
                  if b then genv', fenv, lenv, e, b else exec_code i genv' fenv lenv
           end
@@ -91,49 +121,84 @@ and exec_code i genv fenv lenv=
                     for_func genv fenv (env_for::lenv) e s
     | Skip -> raise ExcepSkip
     | Putchar(e) -> let tmp = eval_code e genv fenv lenv in
-                    print_int tmp; print_string "\n"; genv, fenv, lenv, -1, false
+                    begin
+                    match tmp with
+                      |I(tmp) ->print_int tmp;print_string "\n"; genv, fenv, lenv, N, false
+                      |B(tmp) ->if tmp then print_string "true" else print_string "false";print_string "\n"; genv, fenv, lenv, N, false
+                      |S(tmp) -> print_string tmp; print_string "\n"; genv, fenv, lenv, N, false
+                      |N -> print_string "null"; print_string "\n"; genv, fenv, lenv, N, false
+                    end
     | Return(e) -> let tmp = eval_code e genv fenv lenv in genv, fenv, lenv, tmp, true
     | Expr(e) -> let tmp = eval_code e genv fenv lenv in genv, fenv, lenv, tmp, false
 
 and exec_function_code b genv fenv lenv= 
   match b with
-      | [] -> genv, fenv, lenv, -1, false
+      | [] -> genv, fenv, lenv, N, false
       | i :: b' -> let genv', fenv, lenv, e, b = exec_code i genv fenv lenv in
                    if b then genv', fenv, lenv, e, b else exec_function_code b' genv' fenv lenv
 and eval_code e genv fenv lenv=
   match e with
-    | Cst n -> n
-    | BCst b -> if b then 1 else 0
+    | Cst n -> I(n)
+    | BCst b -> if b then B(true) else B(false)
+    | Str s -> S(s)
     | Get x -> let tmp = try List.find (fun env -> try let _ = Hashtbl.find env x in true with Not_found -> false) lenv with Not_found -> genv in
                let tmp = try Hashtbl.find tmp x with Not_found -> failwith ("unknown variable "^x) in tmp
     | Add(e1, e2) -> 
       let v1 = eval_code e1 genv fenv lenv in
       let v2 = eval_code e2 genv fenv lenv in
-      v1 + v2
+      begin
+      match v1, v2 with
+        |I(v1), I(v2) -> I(v1 + v2)
+        |_, _ -> failwith "type error 7"
+      end
     | Mul(e1, e2) ->
       let v1 = eval_code e1 genv fenv lenv in
       let v2 = eval_code e2 genv fenv lenv in
-      v1 * v2
+      begin
+      match v1, v2 with
+        |I(v1), I(v2) -> I(v1 * v2)
+        |_, _ -> failwith "type error 8"
+      end
     | Lt(e1, e2) ->
       let v1 = eval_code e1 genv fenv lenv in
       let v2 = eval_code e2 genv fenv lenv in
-      if v1 < v2 then 1 else 0
-    | Eg(e1, e2) -> let v1 = eval_code e1 genv fenv lenv in
+      begin
+      match v1, v2 with
+        |I(v1), I(v2) -> B(v1 < v2)
+        |_, _ -> failwith "type error 9"
+      end
+    | Eg(e1, e2) -> 
+      let v1 = eval_code e1 genv fenv lenv in
       let v2 = eval_code e2 genv fenv lenv in
-      if v1 = v2 then 1 else 0
-    | And(e1, e2) -> let v1 = eval_code e1 genv fenv lenv in
+      B(v1 = v2)
+    | And(e1, e2) -> 
+      let v1 = eval_code e1 genv fenv lenv in
       let v2 = eval_code e2 genv fenv lenv in
-      if v1 + v2 > 1 then 1 else 0
-    | Or(e1, e2) -> let v1 = eval_code e1 genv fenv lenv in
+      begin
+      match v1, v2 with
+        |B(v1), B(v2) -> B(v1 && v2)
+        |_, _ -> failwith "type error 10"
+      end
+    | Or(e1, e2) -> 
+      let v1 = eval_code e1 genv fenv lenv in
       let v2 = eval_code e2 genv fenv lenv in
-      if v1 + v2 > 0 then 1 else 0
-    | Not(e1) -> let v1 = eval_code e1 genv fenv lenv in
-      if v1 = 1 then 0 else 1
-    | Null(_) -> -1  (*not initialised variable*)
+      begin
+      match v1, v2 with
+        |B(v1), B(v2) -> B(v1 || v2)
+        |_, _ -> failwith "type error 11"
+      end
+    | Not(e1) -> 
+      let v1 = eval_code e1 genv fenv lenv in
+      begin
+      match v1 with
+        |B(v1) -> B(not v1)
+        |_ -> failwith "type error 12"
+      end
+    | Null(_) -> N  (*not initialised variable*)
     | Call(f, p) -> let local_fun_env = Hashtbl.create 100 in (*création d'un environnement local à la fonction*)
                     try List.iter2 (fun x y -> let pvalue = eval_code x genv fenv lenv in Hashtbl.add local_fun_env (fst y) pvalue ) p (Hashtbl.find fenv f).params; (*association arguments valeurs*)
                     List.iter (fun (x,_,e) -> Hashtbl.add local_fun_env x (eval_code e genv fenv lenv)) (Hashtbl.find fenv f).locals; (*ajout des variables locales à l'environnement local*)
-                    let _, _, _, e, b = exec_function_code (Hashtbl.find fenv f).code genv fenv (local_fun_env::lenv) in if b then e else if (Hashtbl.find fenv f).return = Void then -1
+                    let _, _, _, e, b = exec_function_code (Hashtbl.find fenv f).code genv fenv (local_fun_env::lenv) in if b then e else if (Hashtbl.find fenv f).return = Void then N
                     else failwith "error calculation function value" (*calcul du code de la fonction*)
                     with Invalid_argument(_) -> failwith ("wrong arguments in function " ^ f) 
                     | Not_found -> failwith "Error function name"
@@ -148,7 +213,7 @@ and execinstr i genv fenv =
       genv, fenv
     | If(e, b1, b2) ->
       let v = eval_expr e genv fenv in
-      if v = 1
+      if v = B(true)
       then execseq b1 genv fenv
       else let tmp = try execseq b2 genv fenv  with ExcepSkip -> genv, fenv in tmp
     | While(e, b) ->
@@ -156,7 +221,7 @@ and execinstr i genv fenv =
         try 
           begin 
             let v = eval_expr e genv fenv in
-            if v = 0 then genv, fenv
+            if v = B(false) then genv, fenv
             else let genv', fenv = execseq b genv fenv in
                  execinstr i genv' fenv
           end
@@ -169,7 +234,13 @@ and execinstr i genv fenv =
                     genv, fenv
     | Skip -> raise ExcepSkip
     | Putchar(e) -> let tmp = eval_expr e genv fenv in
-                    print_int tmp; print_string "\n"; genv, fenv
+                    begin
+                    match tmp with
+                      |I(tmp) ->print_int tmp; print_string "\n"; genv, fenv
+                      |B(tmp) ->if tmp then print_string "true" else print_string "false";print_string "\n"; genv, fenv
+                      |S(tmp) -> print_string tmp;print_string "\n"; genv, fenv
+                      |N -> print_string "null";print_string "\n"; genv, fenv
+                    end
     | Return(e) -> let _ = eval_expr e genv fenv in genv, fenv
     | Expr(e) ->let _ = eval_expr e genv fenv in genv, fenv
 

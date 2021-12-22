@@ -14,6 +14,7 @@
         "false",    BOOL_CST false;
         "int",      INT;
         "bool",     BOOL;
+        "string",   STRING;
         "void",     VOID;
         "putchar",  PUTCHAR;
         "if",       IF;
@@ -74,6 +75,8 @@ rule token = parse
       { OR }
   | "!"
       { NOT }
+  | "\"" ([^'\"']* as s) "\""
+      { STR s }
   | _
       { failwith ("Unknown character : " ^ (lexeme lexbuf)) }
   | eof

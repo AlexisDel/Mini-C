@@ -17,6 +17,7 @@ let typecheck_program (prog: prog) =
                                   failwith (did_u_mean v (bindings_to_var_names (Env.bindings local_env) (Env.bindings global_env)) ) in ty
     | Cst _ -> Int
     | BCst _ -> Bool
+    | Str _ -> String
     | Add(e1,e2) -> if(type_expr local_env e1 = Int && type_expr local_env e2 = Int) then Int else failwith "type error"
     | Mul(e1,e2) -> if(type_expr local_env e1 = Int && type_expr local_env e2 = Int) then Int else failwith "type error"
     | Lt(e1,e2) -> if(type_expr local_env e1 = Int && type_expr local_env e2 = Int) then Bool else failwith "type error"
@@ -46,7 +47,6 @@ let typecheck_program (prog: prog) =
     if ty <> type_expr Env.empty e then failwith "type error"
   in
 
-
   (* Vérification du bon typage d'une fonction.
      C'est une fonction locale : on a accès à [prog] et à [global_env]. *)
   let typecheck_function (fdef: fun_def) =
@@ -71,7 +71,7 @@ let typecheck_program (prog: prog) =
        Toujours local. *)
     let rec typecheck_instr local_env = function
       | Skip -> ()
-      | Putchar(e) -> if type_expr local_env e <> Int then failwith "type error"
+      | Putchar(e) -> let _ = type_expr local_env e in ()
       | Set(v,e) -> let ty, _ = try Env.find v local_env with Not_found -> try Env.find v global_env with Not_found -> 
                                   failwith (did_u_mean v (bindings_to_var_names (Env.bindings local_env) (Env.bindings global_env)) ) in
                     if ty <> type_expr local_env e then failwith "type error"
