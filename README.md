@@ -22,7 +22,7 @@ Nous avons complété le squelette fourni et implémenté l'ensemble des "brique
 - Quelques instructions
 	- Putchar
 	- Affectation
-	- If else
+	- If Else
 	- Boucle while
 	- Return
 - Quelques expressions
