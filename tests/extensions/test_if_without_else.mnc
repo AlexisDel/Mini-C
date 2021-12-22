@@ -1,0 +1,9 @@
+int test(){
+  if (1 < 2){
+    putchar(1);
+  }
+}
+
+int main(){
+  return 0;
+}

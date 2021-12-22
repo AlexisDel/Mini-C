@@ -1,0 +1,15 @@
+int get_longueur(){
+  return 1;
+}
+
+int get_largeur(){
+  return 2;
+}
+
+int test(){
+  return getlonguer();
+}
+
+int main(){
+  return 0;
+}

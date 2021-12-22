@@ -9,7 +9,7 @@ let minimum a b c =
    L'ordre est donné via l'ordre de concaténation : (Env.bindings local_env)@(Env.bindings global_env)
    NB : btw, sans doute pas la meilleur chose à faire, but if it works, it works
  *)
-let bindings_to_var_names local_env global_env = List.fold_left (fun acc (v,_) -> v::acc) [] (local_env@global_env)
+let bindings_to_var_names local_env global_env = List.fold_left (fun acc (v,_) -> v::acc) [] (global_env@local_env)
 
 let fun_def_to_fun_names funs_def = List.fold_left (fun acc f -> (f.name)::acc) [] funs_def
 

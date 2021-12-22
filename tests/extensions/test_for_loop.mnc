@@ -1,0 +1,11 @@
+int test(){
+  
+  for(int i = 1; i < 11; i = i + 2){
+    i = i + -1;
+    putchar(i);
+  }
+}
+
+int main(){
+  return 0;
+}

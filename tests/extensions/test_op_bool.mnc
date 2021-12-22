@@ -1,0 +1,12 @@
+bool a = true;
+bool b = false;
+
+int test(){
+	bool c = a || b == a && b;
+	bool not_c = !c ;
+}
+
+int main(){
+	return 0;
+}
+
