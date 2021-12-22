@@ -31,22 +31,18 @@ Nous avons complété le squelette fourni et implémenté l'ensemble des "brique
 
 Le typechecker vérifie récursivement le type de nos objets, par exemple, pour le `while` :
 ```ocaml=
-...
 | While(e,s) -> if type_expr local_env e <> Bool then failwith "type error"
                 else List.iter (typecheck_instr local_env) s;
-...
 ```
 On verifie que l'expression `e` est bien de type booléen, et on appel récursivement une vérification de type sur chaque élément composant la séquence d'instruction de la boucle.
 
 Pour l'appel de variable :
 ```ocaml=
-...
 | Get(v) -> let ty, e = try Env.find v local_env with Not_found -> 
             try Env.find v global_env with Not_found -> 
             failwith (did_u_mean v 
             (bindings_to_var_names (Env.bindings local_env) (Env.bindings global_env))) in
             if ty = type_expr local_env e then ty else failwith "type error"
-...
 ```
 Dans cet exemple, on cherche le type et la valeur de la variable `v` stockés dans un environnement local puis, on verifie que le type de `v` est bien le même que le type de sa valeur. 
 Si le nom de la variable n'est pas une clé de l'environnement, alors le nom est mal écris ou n'existe pas, auquel cas on fait un appel à la fonction `did_u_mean` présentée dans la partie [Error Handling](#Did-you-mean-?).
