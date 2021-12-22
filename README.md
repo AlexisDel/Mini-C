@@ -9,8 +9,8 @@ Dans ce projet, nous avons construit la partie frontend d'un compilateur pour le
 
 ## Noyeau Mini-C
 :page_facing_up: 
-[`test_core.mnc`](./tests/noyeau/test_core.mnc)
-[`test_ennonce.mnc`](./tests/interpret/test_ennonce.mnc)
+[`test_core.mnc`](./tests/noyau/test_core.mnc)
+[`test_ennonce.mnc`](./tests/interprete/test_enonce.mnc)
     
 Nous avons complété le squelette fourni et implémenté l'ensemble des "briques de base" de Mini-C à savoir :
 
